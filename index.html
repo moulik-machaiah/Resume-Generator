@@ -330,20 +330,20 @@ body::before {
         </label>
       </div>
       <div class="card">
-        <div class="field"><label>Full Name</label><input type="text" id="p-name" placeholder="e.g. Moulik Machaiah SJ"/></div>
+        <div class="field"><label>Full Name</label><input type="text" id="p-name" placeholder="Enter your name here"/></div>
       </div>
       <div class="card">
         <div class="card-label">Academic Identity</div>
         <div class="row row-2" style="margin-bottom:14px">
-          <div class="field"><label>Degree Title</label><input type="text" id="p-degree" placeholder="e.g. Bachelor of Technology"/></div>
-          <div class="field"><label>Field of Study</label><input type="text" id="p-degree-field" placeholder="e.g. in Computer Science Engineering"/></div>
+          <div class="field"><label>Degree Title</label><input type="text" id="p-degree" placeholder="e.g. Bachelor of ..."/></div>
+          <div class="field"><label>Field of Study</label><input type="text" id="p-degree-field" placeholder="e.g. in ..."/></div>
         </div>
-        <div class="field"><label>Institution</label><input type="text" id="p-institution" placeholder="e.g. PES University, Bangalore"/></div>
+        <div class="field"><label>Institution</label><input type="text" id="p-institution" placeholder="university, place"/></div>
       </div>
       <div class="card">
         <div class="card-label">Contact Details</div>
         <div class="row row-2">
-          <div class="field"><label>Phone</label><input type="text" id="p-phone" placeholder="+91 9876543210"/></div>
+          <div class="field"><label>Phone</label><input type="text" id="p-phone" placeholder=" "/></div>
           <div class="field"><label>Email</label><input type="email" id="p-email" placeholder="you@example.com"/></div>
         </div>
       </div>
@@ -369,7 +369,7 @@ body::before {
         <div class="page-icon">✍️</div>
       </div>
       <div class="card">
-        <div class="field"><label>Professional Summary</label><textarea id="s-summary" rows="7" placeholder="I am a motivated Computer Science student with solid foundations in…"></textarea></div>
+        <div class="field"><label>Professional Summary</label><textarea id="s-summary" rows="7" placeholder="I am a motivated ### student with solid foundations in…"></textarea></div>
       </div>
       <div class="nav-row"><button class="btn-back" onclick="goTo(0)">← Back</button><button class="btn-next" onclick="goTo(2)">Add education →</button></div>
     </section>
@@ -380,7 +380,7 @@ body::before {
         <div>
           <div class="step-badge">Step 03</div>
           <div class="page-title">Where you <i>studied</i></div>
-          <div class="page-sub">Degrees, senior secondary, secondary — includes Grade column</div>
+          <div class="page-sub">Degrees</div>
         </div>
         <div class="page-icon">🎓</div>
       </div>
@@ -491,7 +491,7 @@ body::before {
       </div>
       <div class="card">
         <div id="lang-search-wrap">
-          <input type="text" id="lang-search" placeholder="Search language… e.g. Tamil, Hindi, French" oninput="filterLangs(this.value)" onkeydown="langKeydown(event)"/>
+          <input type="text" id="lang-search" placeholder="Search language… e.g. English, Hindi, .." oninput="filterLangs(this.value)" onkeydown="langKeydown(event)"/>
           <div id="lang-dropdown"></div>
         </div>
         <div class="lang-selected-label">Selected Languages</div>
@@ -548,7 +548,7 @@ let eduCount=0;
 function addEducation(){
   const g=document.getElementById('edu-group'),idx=eduCount++;
   const d=document.createElement('div');d.className='entry';d.id='edu-'+idx;
-  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Entry ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('edu-${idx}','edu-group',updateEduLabels)">&times;</button></div><div class="field" style="margin-bottom:14px"><label>Degree / Level</label><input type="text" placeholder="e.g. Bachelor of Technology"/></div><div class="row row-3"><div class="field"><label>Institute / Board</label><input type="text" placeholder="e.g. PES University"/></div><div class="field"><label>Grade / CGPA / %</label><input type="text" placeholder="e.g. 9.2 CGPA"/></div><div class="field"><label>Year</label><input type="text" placeholder="e.g. 2022-2026"/></div></div>`;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Entry ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('edu-${idx}','edu-group',updateEduLabels)">&times;</button></div><div class="field" style="margin-bottom:14px"><label>Degree / Level</label><input type="text" placeholder="e.g. Bachelor of ... "/></div><div class="row row-3"><div class="field"><label>Institute / Board</label><input type="text" placeholder=" "/></div><div class="field"><label>Grade / CGPA / %</label><input type="text" placeholder=" 90% "/></div><div class="field"><label>Year</label><input type="text" placeholder="e.g. 2026"/></div></div>`;
   g.appendChild(d);
 }
 function updateEduLabels(){document.querySelectorAll('#edu-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Entry ${i+1}`);}
@@ -568,7 +568,7 @@ let projCount=0;
 function addProject(){
   const g=document.getElementById('projects-group'),idx=projCount++;
   const d=document.createElement('div');d.className='entry';d.id='proj-'+idx;
-  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Project ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('proj-${idx}','projects-group',updateProjLabels)">&times;</button></div><div class="row row-2" style="margin-bottom:14px"><div class="field"><label>Project Title</label><input type="text" placeholder="e.g. GST Fraud Detection System"/></div><div class="field"><label>Skills Used</label><input type="text" placeholder="e.g. Python, ML, Pandas"/></div></div><div class="field"><label>Bullet Points — one per line</label><textarea rows="4" placeholder="Developed a system using ML&#10;Achieved F1-score of 96%"></textarea></div>`;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Project ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('proj-${idx}','projects-group',updateProjLabels)">&times;</button></div><div class="row row-2" style="margin-bottom:14px"><div class="field"><label>Project Title</label><input type="text" placeholder="Enter your Title"/></div><div class="field"><label>Skills Used</label><input type="text" placeholder=" "/></div></div><div class="field"><label>Bullet Points — one per line</label><textarea rows="4" placeholder=" "></textarea></div>`;
   g.appendChild(d);
 }
 function updateProjLabels(){document.querySelectorAll('#projects-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Project ${i+1}`);}
@@ -578,7 +578,7 @@ let internCount=0;
 function addInternship(){
   const g=document.getElementById('intern-group'),idx=internCount++;
   const d=document.createElement('div');d.className='entry';d.id='intern-'+idx;
-  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Internship ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('intern-${idx}','intern-group',updateInternLabels)">&times;</button></div><div class="row row-2" style="margin-bottom:14px"><div class="field"><label>Role</label><input type="text" placeholder="e.g. Automation &amp; Robotics Intern"/></div><div class="field"><label>Period</label><input type="text" placeholder="e.g. Jan 2026 - ongoing"/></div></div><div class="field" style="margin-bottom:14px"><label>Organisation</label><input type="text" placeholder="e.g. Automation &amp; Robotics Centre, PESU ECC"/></div><div class="field" style="margin-bottom:14px"><label>Skills Used</label><input type="text" placeholder="e.g. Python, KUKA Robotics, Linux"/></div><div class="field"><label>Bullet Points — one per line</label><textarea rows="3" placeholder="Gained hands-on experience&#10;Applied Python for robotic control"></textarea></div>`;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Internship ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('intern-${idx}','intern-group',updateInternLabels)">&times;</button></div><div class="row row-2" style="margin-bottom:14px"><div class="field"><label>Role</label><input type="text" placeholder="e.g. xyz Intern"/></div><div class="field"><label>Period</label><input type="text" placeholder="e.g. Jan 2026 - ongoing"/></div></div><div class="field" style="margin-bottom:14px"><label>Organisation</label><input type="text" placeholder="e.g. xyz company, place"/></div><div class="field" style="margin-bottom:14px"><label>Skills Used</label><input type="text" placeholder=" "/></div><div class="field"><label>Bullet Points — one per line</label><textarea rows="3" placeholder="Gained hands-on experience in .. "></textarea></div>`;
   g.appendChild(d);
 }
 function updateInternLabels(){document.querySelectorAll('#intern-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Internship ${i+1}`);}
@@ -588,7 +588,7 @@ function addCourse(def=''){
   const g=document.getElementById('courses-group');
   const d=document.createElement('div');d.className='course-row';
   const uid='cr-'+Date.now()+Math.floor(Math.random()*9999);d.id=uid;
-  d.innerHTML=`<input type="text" placeholder="e.g. Computer Networks" value="${def}"/><button class="btn-remove" onclick="removeCourse('${uid}')">&times;</button>`;
+  d.innerHTML=`<input type="text" placeholder="Enter your course" value="${def}"/><button class="btn-remove" onclick="removeCourse('${uid}')">&times;</button>`;
   g.appendChild(d);
 }
 function removeCourse(id){
@@ -602,7 +602,7 @@ let posCount=0;
 function addPosition(){
   const g=document.getElementById('positions-group'),idx=posCount++;
   const d=document.createElement('div');d.className='entry';d.id='pos-'+idx;
-  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Position ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('pos-${idx}','positions-group',updatePosLabels)">&times;</button></div><div class="row row-2"><div class="field"><label>Title</label><input type="text" placeholder="e.g. Head of Hospitality Domain, Maaya'24"/></div><div class="field"><label>Period</label><input type="text" placeholder="e.g. Aug 2024 - May 2025"/></div></div>`;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Position ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('pos-${idx}','positions-group',updatePosLabels)">&times;</button></div><div class="row row-2"><div class="field"><label>Title</label><input type="text" placeholder="e.g. Head of .. "/></div><div class="field"><label>Period</label><input type="text" placeholder="e.g. Aug 202* - May 202*"/></div></div>`;
   g.appendChild(d);
 }
 function updatePosLabels(){document.querySelectorAll('#positions-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Position ${i+1}`);}
@@ -612,7 +612,7 @@ let miscCount=0;
 function addMisc(){
   const g=document.getElementById('misc-group'),idx=miscCount++;
   const d=document.createElement('div');d.className='entry';d.id='misc-'+idx;
-  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Item ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('misc-${idx}','misc-group',updateMiscLabels)">&times;</button></div><div class="field" style="margin-bottom:14px"><label>Achievement / Certification / Award</label><input type="text" placeholder="e.g. Frontend Developer (React) - Coursera"/></div><div class="field"><label>Link · optional (makes it clickable in PDF)</label><input type="url" class="link-input" placeholder="https://credential.url"/></div>`;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Item ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('misc-${idx}','misc-group',updateMiscLabels)">&times;</button></div><div class="field" style="margin-bottom:14px"><label>Achievement / Certification / Award</label><input type="text" placeholder="e.g. Certificate in .. "/></div><div class="field"><label>Link · optional (makes it clickable in PDF)</label><input type="url" class="link-input" placeholder="https://credential.url"/></div>`;
   g.appendChild(d);
 }
 function updateMiscLabels(){document.querySelectorAll('#misc-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Item ${i+1}`);}
