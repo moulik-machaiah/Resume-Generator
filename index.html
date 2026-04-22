@@ -52,13 +52,40 @@ body::before {
 #wizard-bar {
   background: var(--paper);
   border-bottom: 1px solid var(--border);
-  padding: 0 32px;
+  padding: 0 0 0 0;
   display: flex; align-items: stretch; gap: 0;
   overflow-x: auto; scrollbar-width: none;
   position: sticky; top: 0; z-index: 100;
   box-shadow: 0 2px 12px var(--shadow);
 }
 #wizard-bar::-webkit-scrollbar { display: none; }
+#wiz-steps-scroll::-webkit-scrollbar { display: none; }
+#wiz-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 24px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--paper);
+  min-width: 180px;
+}
+#wiz-brand .brand-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--ink); display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+#wiz-brand .brand-icon svg { width: 18px; height: 18px; }
+#wiz-brand .brand-text { display: flex; flex-direction: column; gap: 1px; }
+#wiz-brand .brand-title {
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  color: var(--ink); letter-spacing: -0.3px; line-height: 1;
+}
+#wiz-brand .brand-sub {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+  color: var(--ink-faint); letter-spacing: 1px; text-transform: uppercase;
+}
+#wiz-steps-scroll {
+  display: flex; align-items: stretch; flex: 1;
+  overflow-x: auto; scrollbar-width: none;
+}
 .wiz-step {
   display: flex; align-items: center; gap: 10px;
   padding: 14px 18px; cursor: pointer;
@@ -81,7 +108,7 @@ body::before {
 .wiz-step.done .wiz-label { color: var(--sage); }
 
 /* CONTENT */
-#content-wrap { display: flex; justify-content: center; padding: 56px 24px 60px; }
+#content-wrap { display: flex; justify-content: center; padding: 56px 24px 60px; min-height: calc(100vh - 57px); }
 .section { display: none; width: 100%; max-width: 720px; animation: pageIn 0.4s cubic-bezier(0.16,1,0.3,1); }
 .section.active { display: block; }
 @keyframes pageIn { from { opacity: 0; transform: translateY(24px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -262,6 +289,25 @@ body::before {
 <div id="progress-strip"><div id="progress-fill"></div></div>
 <div id="app">
   <div id="wizard-bar">
+    <div id="wiz-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="3" width="11" height="14" rx="1.5" fill="white" opacity="0.9"/>
+          <rect x="7" y="6" width="5" height="1.2" rx="0.6" fill="#D97706"/>
+          <rect x="7" y="8.5" width="7" height="1" rx="0.5" fill="white" opacity="0.5"/>
+          <rect x="7" y="10.5" width="6" height="1" rx="0.5" fill="white" opacity="0.5"/>
+          <rect x="7" y="12.5" width="4" height="1" rx="0.5" fill="white" opacity="0.5"/>
+          <circle cx="17" cy="15" r="4" fill="#D97706"/>
+          <path d="M15.5 15l1 1 2-2" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">Resume<i style="font-style:italic;color:var(--amber)">.</i></span>
+        <span class="brand-sub">Builder</span>
+      </div>
+    </div>
+    <div id="wiz-steps-scroll">
+    </div>
   </div>
   <div id="content-wrap">
 
@@ -470,11 +516,11 @@ body::before {
 const SECTIONS=[{id:'sec-personal',label:'Personal Info'},{id:'sec-summary',label:'Summary'},{id:'sec-education',label:'Education'},{id:'sec-skills',label:'Skills'},{id:'sec-projects',label:'Projects'},{id:'sec-internships',label:'Internships'},{id:'sec-courses',label:'Courses'},{id:'sec-positions',label:'Positions'},{id:'sec-misc',label:'Misc'},{id:'sec-languages',label:'Languages'}];
 let currentIdx=0;
 function buildWizard(){
-  const bar=document.getElementById('wizard-bar');
+  const scroll=document.getElementById('wiz-steps-scroll');
   SECTIONS.forEach((s,i)=>{
     const el=document.createElement('div');el.className='wiz-step'+(i===0?' active':'');el.id='wiz-'+i;
     el.innerHTML=`<span class="wiz-num">${String(i+1).padStart(2,'0')}</span><span class="wiz-label">${s.label}</span>`;
-    el.addEventListener('click',()=>goTo(i));bar.appendChild(el);
+    el.addEventListener('click',()=>goTo(i));scroll.appendChild(el);
   });
 }
 function goTo(idx){
