@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Resume Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,400;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --cream: #FAF7F2;
+  --cream-dark: #F2EDE3;
+  --cream-darker: #E8E0D0;
+  --ink: #1C1917;
+  --ink-mid: #44403C;
+  --ink-light: #78716C;
+  --ink-faint: #A8A29E;
+  --paper: #FFFDF9;
+  --amber: #D97706;
+  --amber-light: #FEF3C7;
+  --amber-pale: #FFFBEB;
+  --sage: #4D7C6F;
+  --sage-light: #ECFDF5;
+  --rose: #BE185D;
+  --sky: #0369A1;
+  --border: #DDD6CC;
+  --border-strong: #C5BBB0;
+  --shadow: rgba(28,25,23,0.08);
+  --shadow-md: rgba(28,25,23,0.14);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px;
+}
+#app { display: grid; grid-template-rows: auto 1fr; min-height: 100vh; position: relative; z-index: 1; }
+
+/* WIZARD BAR */
+#wizard-bar {
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex; align-items: stretch; gap: 0;
+  overflow-x: auto; scrollbar-width: none;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+#wizard-bar::-webkit-scrollbar { display: none; }
+.wiz-step {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px; cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
+}
+.wiz-step:hover { background: var(--cream); }
+.wiz-step.active { border-bottom-color: var(--amber); background: var(--amber-pale); }
+.wiz-step.done .wiz-num { background: var(--sage); color: white; border-color: var(--sage); }
+.wiz-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  color: var(--ink-light); flex-shrink: 0; transition: all 0.2s;
+}
+.wiz-step.active .wiz-num { background: var(--amber); color: white; border-color: var(--amber); }
+.wiz-label { font-size: 11.5px; font-weight: 600; color: var(--ink-light); transition: color 0.2s; }
+.wiz-step.active .wiz-label { color: var(--amber); }
+.wiz-step.done .wiz-label { color: var(--sage); }
+#wiz-gen {
+  margin-left: auto; align-self: center; flex-shrink: 0;
+  background: var(--ink); color: var(--cream); border: none;
+  border-radius: 8px; padding: 9px 20px;
+  font-family: var(--font-body); font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;
+  display: flex; align-items: center; gap: 6px;
+}
+#wiz-gen:hover { background: var(--amber); transform: translateY(-1px); box-shadow: 0 4px 14px var(--shadow-md); }
+#wiz-gen:disabled { background: var(--ink-faint); cursor: not-allowed; transform: none; }
+
+/* CONTENT */
+#content-wrap { display: flex; justify-content: center; padding: 56px 24px 100px; }
+.section { display: none; width: 100%; max-width: 720px; animation: pageIn 0.4s cubic-bezier(0.16,1,0.3,1); }
+.section.active { display: block; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(24px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* PAGE HEADER */
+.page-header {
+  margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+}
+.step-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--amber-light); color: var(--amber);
+  border: 1px solid #FDE68A; border-radius: 20px;
+  padding: 3px 12px; font-size: 10.5px; font-weight: 700;
+  font-family: var(--font-mono); letter-spacing: 0.8px;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.page-title {
+  font-family: var(--font-display); font-size: 42px; font-weight: 900;
+  letter-spacing: -1.5px; line-height: 1.05; color: var(--ink);
+}
+.page-title i { font-style: italic; font-weight: 400; color: var(--amber); }
+.page-sub { font-size: 13.5px; color: var(--ink-light); margin-top: 8px; line-height: 1.55; }
+.page-icon { font-size: 52px; line-height: 1; flex-shrink: 0; opacity: 0.7; }
+
+/* CARDS */
+.card {
+  background: var(--paper); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; margin-bottom: 16px;
+  box-shadow: 0 2px 8px var(--shadow); transition: border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.card:hover { border-color: var(--border-strong); }
+.card:focus-within { border-color: var(--amber); box-shadow: 0 2px 8px var(--shadow), 0 0 0 3px rgba(217,119,6,0.08); }
+.card-label {
+  font-size: 10px; font-weight: 700; color: var(--ink-faint);
+  letter-spacing: 2px; text-transform: uppercase;
+  font-family: var(--font-mono); margin-bottom: 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.card-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* FIELDS */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 11px; font-weight: 700; color: var(--ink-mid); letter-spacing: 0.5px; text-transform: uppercase; }
+.field input, .field textarea {
+  border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 11px 14px; font-family: var(--font-body); font-size: 14px;
+  color: var(--ink); background: var(--cream); outline: none; transition: all 0.18s; width: 100%;
+}
+.field input::placeholder, .field textarea::placeholder { color: var(--ink-faint); font-style: italic; }
+.field input:focus, .field textarea:focus { border-color: var(--amber); background: var(--paper); box-shadow: 0 0 0 3px rgba(217,119,6,0.07); }
+.field textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+.field input.link-input { color: var(--sky); font-family: var(--font-mono); font-size: 12.5px; }
+
+.row { display: grid; gap: 14px; }
+.row-2 { grid-template-columns: 1fr 1fr; }
+.row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* ENTRIES */
+.entry { position: relative; }
+.entry + .entry { border-top: 1px dashed var(--border); padding-top: 24px; margin-top: 24px; }
+.entry-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.entry-tag {
+  background: var(--cream-dark); border: 1px solid var(--border);
+  color: var(--ink-light); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  font-family: var(--font-mono); padding: 3px 10px; border-radius: 4px;
+}
+
+/* BUTTONS */
+.btn-add {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--paper); color: var(--ink-mid);
+  border: 1.5px dashed var(--border-strong); border-radius: 10px;
+  padding: 11px 20px; font-family: var(--font-body); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s;
+  margin-top: 6px; width: fit-content;
+}
+.btn-add:hover { background: var(--amber-light); border-color: var(--amber); color: var(--amber); transform: translateY(-1px); box-shadow: 0 4px 12px var(--shadow); }
+.btn-remove {
+  background: transparent; border: 1.5px solid var(--border);
+  color: var(--ink-faint); font-size: 16px; cursor: pointer;
+  border-radius: 8px; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0;
+}
+.btn-remove:hover { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
+
+.nav-row { display: flex; align-items: center; justify-content: space-between; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); gap: 12px; }
+.nav-row-right { justify-content: flex-end; }
+.btn-back {
+  background: transparent; color: var(--ink-light); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 11px 24px; font-family: var(--font-body);
+  font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-back:hover { border-color: var(--ink-light); color: var(--ink); }
+.btn-next {
+  background: var(--ink); color: var(--cream); border: none;
+  border-radius: 10px; padding: 11px 28px; font-family: var(--font-body);
+  font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px; letter-spacing: 0.2px;
+}
+.btn-next:hover { background: var(--amber); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(217,119,6,0.25); }
+
+/* PHOTO */
+#photo-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; background: var(--cream); border: 2px dashed var(--border-strong);
+  border-radius: 12px; padding: 36px; color: var(--ink-light);
+  font-size: 14px; cursor: pointer; transition: all 0.2s; width: 100%; font-style: italic;
+}
+#photo-btn:hover { background: var(--amber-pale); border-color: var(--amber); color: var(--amber); }
+#photo-btn input { display: none; }
+
+/* LANG */
+#lang-search-wrap { position: relative; }
+#lang-search {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 11px 14px; font-family: var(--font-body); font-size: 14px;
+  background: var(--cream); color: var(--ink); outline: none; transition: all 0.18s;
+}
+#lang-search:focus { border-color: var(--amber); background: var(--paper); box-shadow: 0 0 0 3px rgba(217,119,6,0.07); }
+#lang-search::placeholder { color: var(--ink-faint); font-style: italic; }
+#lang-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 99;
+  background: var(--paper); border: 1.5px solid var(--border-strong);
+  border-radius: 12px; max-height: 220px; overflow-y: auto;
+  box-shadow: 0 16px 48px var(--shadow-md); display: none;
+}
+.lang-option { padding: 10px 16px; cursor: pointer; font-size: 13.5px; color: var(--ink-mid); transition: background 0.1s; }
+.lang-option:hover, .lang-option.focused { background: var(--amber-light); color: var(--amber); }
+.lang-empty { padding: 12px 16px; color: var(--ink-faint); font-size: 13px; font-style: italic; }
+.lang-selected-label { font-size: 10px; font-weight: 700; color: var(--ink-faint); letter-spacing: 2px; text-transform: uppercase; font-family: var(--font-mono); margin: 16px 0 10px; }
+#lang-chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 34px; }
+.lang-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--cream-dark); color: var(--ink-mid);
+  border: 1.5px solid var(--border-strong); border-radius: 20px;
+  padding: 5px 14px; font-family: var(--font-body); font-size: 12.5px;
+  font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.lang-chip:hover { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
+.lang-none { color: var(--ink-faint); font-size: 13px; align-self: center; font-style: italic; }
+
+.done-tip { background: var(--sage-light); border: 1.5px solid #A7F3D0; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+.done-tip strong { font-size: 14px; color: var(--sage); display: block; margin-bottom: 4px; }
+.done-tip p { font-size: 12.5px; color: #059669; }
+
+.course-row { display: flex; align-items: center; gap: 10px; }
+.course-row input { flex: 1; }
+.course-row + .course-row { margin-top: 10px; }
+
+/* PROGRESS */
+#progress-strip { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 999; background: var(--border); }
+#progress-fill { height: 100%; background: linear-gradient(90deg, var(--amber), #F59E0B); transition: width 0.4s cubic-bezier(0.4,0,0.2,1); width: 10%; }
+
+/* FOOTER */
+#footer-strip {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--paper); border-top: 1px solid var(--border);
+  padding: 12px 32px; display: flex; align-items: center;
+  justify-content: space-between; z-index: 100; box-shadow: 0 -4px 20px var(--shadow);
+}
+.footer-steps { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); letter-spacing: 1px; }
+.footer-steps span { color: var(--amber); font-weight: 600; }
+.footer-nav { display: flex; gap: 10px; }
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 72px; left: 50%;
+  transform: translateX(-50%) translateY(40px);
+  background: var(--ink); color: var(--cream);
+  padding: 13px 24px 13px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; z-index: 9999;
+  transition: transform 0.3s, opacity 0.3s; opacity: 0;
+  box-shadow: 0 12px 40px var(--shadow-md);
+  display: flex; align-items: center; gap: 10px;
+}
+#toast::before { content: '✦'; color: var(--amber); }
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+#toast.error { background: #7F1D1D; }
+#toast.error::before { content: '⚠'; color: #FCA5A5; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--cream-darker); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="progress-strip"><div id="progress-fill"></div></div>
+<div id="app">
+  <div id="wizard-bar">
+    <button id="wiz-gen" onclick="generatePDF()">↓ Export PDF</button>
+  </div>
+  <div id="content-wrap">
+
+    <!-- 1. PERSONAL -->
+    <section class="section active" id="sec-personal">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 01</div>
+          <div class="page-title">Who <i>are you,</i><br>exactly?</div>
+          <div class="page-sub">Name, contact details, and your corner of the internet</div>
+        </div>
+        <div class="page-icon">🪪</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Profile Photo · Optional</div>
+        <label id="photo-btn" onclick="document.getElementById('photo-input').click()">
+          <span style="font-size:28px">📷</span>
+          <span id="photo-label">Click to upload a photo</span>
+          <input type="file" id="photo-input" accept="image/*" onchange="handlePhoto(this)"/>
+        </label>
+      </div>
+      <div class="card">
+        <div class="field"><label>Full Name</label><input type="text" id="p-name" placeholder="e.g. Moulik Machaiah SJ"/></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Academic Identity</div>
+        <div class="row row-2" style="margin-bottom:14px">
+          <div class="field"><label>Degree Title</label><input type="text" id="p-degree" placeholder="e.g. Bachelor of Technology"/></div>
+          <div class="field"><label>Field of Study</label><input type="text" id="p-degree-field" placeholder="e.g. in Computer Science Engineering"/></div>
+        </div>
+        <div class="field"><label>Institution</label><input type="text" id="p-institution" placeholder="e.g. PES University, Bangalore"/></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Contact Details</div>
+        <div class="row row-2">
+          <div class="field"><label>Phone</label><input type="text" id="p-phone" placeholder="+91 9876543210"/></div>
+          <div class="field"><label>Email</label><input type="email" id="p-email" placeholder="you@example.com"/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Online Presence · Optional</div>
+        <div class="row row-2" style="margin-bottom:14px">
+          <div class="field"><label>LinkedIn URL</label><input type="url" id="p-linkedin" class="link-input" placeholder="https://linkedin.com/in/…"/></div>
+          <div class="field"><label>GitHub URL</label><input type="url" id="p-github" class="link-input" placeholder="https://github.com/…"/></div>
+        </div>
+        <div class="field"><label>Portfolio URL</label><input type="url" id="p-portfolio" class="link-input" placeholder="https://yoursite.com"/></div>
+      </div>
+      <div class="nav-row nav-row-right"><button class="btn-next" onclick="goTo(1)">Introduce yourself →</button></div>
+    </section>
+
+    <!-- 2. SUMMARY -->
+    <section class="section" id="sec-summary">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 02</div>
+          <div class="page-title">Your <i>story</i><br>in a paragraph</div>
+          <div class="page-sub">A short summary that grabs attention right at the top</div>
+        </div>
+        <div class="page-icon">✍️</div>
+      </div>
+      <div class="card">
+        <div class="field"><label>Professional Summary</label><textarea id="s-summary" rows="7" placeholder="I am a motivated Computer Science student with solid foundations in…"></textarea></div>
+      </div>
+      <div class="nav-row"><button class="btn-back" onclick="goTo(0)">← Back</button><button class="btn-next" onclick="goTo(2)">Add education →</button></div>
+    </section>
+
+    <!-- 3. EDUCATION -->
+    <section class="section" id="sec-education">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 03</div>
+          <div class="page-title">Where you <i>studied</i></div>
+          <div class="page-sub">Degrees, senior secondary, secondary — includes Grade column</div>
+        </div>
+        <div class="page-icon">🎓</div>
+      </div>
+      <div class="card" id="edu-group"></div>
+      <button class="btn-add" onclick="addEducation()">+ Add another institution</button>
+      <div class="nav-row"><button class="btn-back" onclick="goTo(1)">← Back</button><button class="btn-next" onclick="goTo(3)">Add skills →</button></div>
+    </section>
+
+    <!-- 4. SKILLS -->
+    <section class="section" id="sec-skills">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 04</div>
+          <div class="page-title">What you <i>know</i></div>
+          <div class="page-sub">Group your skills by category</div>
+        </div>
+        <div class="page-icon">⚡</div>
+      </div>
+      <div class="card" id="skills-group"></div>
+      <button class="btn-add" onclick="addSkill()">+ Add skill category</button>
+      <div class="nav-row"><button class="btn-back" onclick="goTo(2)">← Back</button><button class="btn-next" onclick="goTo(4)">Add projects →</button></div>
+    </section>
+
+    <!-- 5. PROJECTS -->
+    <section class="section" id="sec-projects">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 05</div>
+          <div class="page-title">Things you <i>built</i></div>
+          <div class="page-sub">Your projects, the skills behind them, and what they achieved</div>
+        </div>
+        <div class="page-icon">🚀</div>
+      </div>
+      <div class="card" id="projects-group"></div>
+      <button class="btn-add" onclick="addProject()">+ Add another project</button>
+      <div class="nav-row"><button class="btn-back" onclick="goTo(3)">← Back</button><button class="btn-next" onclick="goTo(5)">Add internships →</button></div>
+    </section>
+
+    <!-- 6. INTERNSHIPS -->
+    <section class="section" id="sec-internships">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 06</div>
+          <div class="page-title">Where you <i>worked</i></div>
+          <div class="page-sub">Internships, roles, and real-world contributions</div>
+        </div>
+        <div class="page-icon">💼</div>
+      </div>
+      <div class="card" id="intern-group"></div>
+      <button class="btn-add" onclick="addInternship()">+ Add internship</button>
+      <div class="nav-row"><button class="btn-back" onclick="goTo(4)">← Back</button><button class="btn-next" onclick="goTo(6)">Add courses →</button></div>
+    </section>
+
+    <!-- 7. COURSES -->
+    <section class="section" id="sec-courses">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 07</div>
+          <div class="page-title">What you <i>studied</i></div>
+          <div class="page-sub">Key courses you've taken — joined by | in the PDF</div>
+        </div>
+        <div class="page-icon">📚</div>
+      </div>
+      <div class="card" id="courses-group"></div>
+      <button class="btn-add" onclick="addCourse()">+ Add a course</button>
+      <div class="nav-row"><button class="btn-back" onclick="goTo(5)">← Back</button><button class="btn-next" onclick="goTo(7)">Add positions →</button></div>
+    </section>
+
+    <!-- 8. POSITIONS -->
+    <section class="section" id="sec-positions">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 08</div>
+          <div class="page-title">How you <i>led</i></div>
+          <div class="page-sub">Leadership roles, club positions, and event work</div>
+        </div>
+        <div class="page-icon">🏆</div>
+      </div>
+      <div class="card" id="positions-group"></div>
+      <button class="btn-add" onclick="addPosition()">+ Add position</button>
+      <div class="nav-row"><button class="btn-back" onclick="goTo(6)">← Back</button><button class="btn-next" onclick="goTo(8)">Add achievements →</button></div>
+    </section>
+
+    <!-- 9. MISC -->
+    <section class="section" id="sec-misc">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 09</div>
+          <div class="page-title">Everything <i>else</i></div>
+          <div class="page-sub">Certifications, awards, and anything worth highlighting</div>
+        </div>
+        <div class="page-icon">🎖️</div>
+      </div>
+      <div class="card" id="misc-group"></div>
+      <button class="btn-add" onclick="addMisc()">+ Add item</button>
+      <div class="nav-row"><button class="btn-back" onclick="goTo(7)">← Back</button><button class="btn-next" onclick="goTo(9)">Final step →</button></div>
+    </section>
+
+    <!-- 10. LANGUAGES -->
+    <section class="section" id="sec-languages">
+      <div class="page-header">
+        <div>
+          <div class="step-badge">Step 10 · Final</div>
+          <div class="page-title">Languages<br><i>you speak</i></div>
+          <div class="page-sub">Search and select all languages you're comfortable in</div>
+        </div>
+        <div class="page-icon">🌍</div>
+      </div>
+      <div class="card">
+        <div id="lang-search-wrap">
+          <input type="text" id="lang-search" placeholder="Search language… e.g. Tamil, Hindi, French" oninput="filterLangs(this.value)" onkeydown="langKeydown(event)"/>
+          <div id="lang-dropdown"></div>
+        </div>
+        <div class="lang-selected-label">Selected Languages</div>
+        <div id="lang-chips"><span class="lang-none">None selected yet</span></div>
+      </div>
+      <div class="done-tip">
+        <strong>✦ You're all set!</strong>
+        <p>Hit the button below — your resume PDF will download straight to your device.</p>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="goTo(8)">← Back</button>
+        <button class="btn-next" onclick="generatePDF()" style="background:var(--sage);">↓ Generate PDF</button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div id="footer-strip">
+  <div class="footer-steps">Step <span id="f-cur">1</span> of <span>10</span></div>
+  <div class="footer-nav">
+    <button class="btn-back" id="f-back" onclick="goTo(currentIdx-1)" style="padding:8px 18px;font-size:12.5px;">← Back</button>
+    <button class="btn-next" id="f-next" onclick="goTo(currentIdx+1)" style="padding:8px 18px;font-size:12.5px;">Next →</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const SECTIONS=[{id:'sec-personal',label:'Personal Info'},{id:'sec-summary',label:'Summary'},{id:'sec-education',label:'Education'},{id:'sec-skills',label:'Skills'},{id:'sec-projects',label:'Projects'},{id:'sec-internships',label:'Internships'},{id:'sec-courses',label:'Courses'},{id:'sec-positions',label:'Positions'},{id:'sec-misc',label:'Misc'},{id:'sec-languages',label:'Languages'}];
+let currentIdx=0;
+function buildWizard(){
+  const bar=document.getElementById('wizard-bar'),btn=document.getElementById('wiz-gen');
+  SECTIONS.forEach((s,i)=>{
+    const el=document.createElement('div');el.className='wiz-step'+(i===0?' active':'');el.id='wiz-'+i;
+    el.innerHTML=`<span class="wiz-num">${String(i+1).padStart(2,'0')}</span><span class="wiz-label">${s.label}</span>`;
+    el.addEventListener('click',()=>goTo(i));bar.insertBefore(el,btn);
+  });
+}
+function goTo(idx){
+  if(idx<0||idx>=SECTIONS.length)return;
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.wiz-step').forEach(w=>w.classList.remove('active'));
+  document.getElementById(SECTIONS[idx].id).classList.add('active');
+  document.getElementById('wiz-'+idx).classList.add('active');
+  document.getElementById('progress-fill').style.width=((idx+1)/SECTIONS.length*100).toFixed(0)+'%';
+  document.getElementById('f-cur').textContent=idx+1;
+  document.getElementById('f-back').style.visibility=idx===0?'hidden':'visible';
+  document.getElementById('f-next').style.display=idx===9?'none':'';
+  currentIdx=idx;
+  document.getElementById('wiz-'+idx).scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  window.scrollTo(0,0);
+}
+buildWizard();
+document.getElementById('f-back').style.visibility='hidden';
+
+let photoDataURL='';
+function handlePhoto(input){
+  if(!input.files[0])return;
+  const r=new FileReader();
+  r.onload=e=>{photoDataURL=e.target.result;document.getElementById('photo-label').textContent='✅ '+input.files[0].name;};
+  r.readAsDataURL(input.files[0]);
+}
+
+let eduCount=0;
+function addEducation(){
+  const g=document.getElementById('edu-group'),idx=eduCount++;
+  const d=document.createElement('div');d.className='entry';d.id='edu-'+idx;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Entry ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('edu-${idx}','edu-group',updateEduLabels)">&times;</button></div><div class="field" style="margin-bottom:14px"><label>Degree / Level</label><input type="text" placeholder="e.g. Bachelor of Technology"/></div><div class="row row-3"><div class="field"><label>Institute / Board</label><input type="text" placeholder="e.g. PES University"/></div><div class="field"><label>Grade / CGPA / %</label><input type="text" placeholder="e.g. 9.2 CGPA"/></div><div class="field"><label>Year</label><input type="text" placeholder="e.g. 2022-2026"/></div></div>`;
+  g.appendChild(d);
+}
+function updateEduLabels(){document.querySelectorAll('#edu-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Entry ${i+1}`);}
+addEducation();
+
+let skillCount=0;
+function addSkill(){
+  const g=document.getElementById('skills-group'),idx=skillCount++;
+  const d=document.createElement('div');d.className='entry';d.id='skill-'+idx;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Category ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('skill-${idx}','skills-group',updateSkillLabels)">&times;</button></div><div class="row row-2"><div class="field"><label>Category Name</label><input type="text" placeholder="e.g. Programming Languages"/></div><div class="field"><label>Items (comma-separated)</label><input type="text" placeholder="e.g. Python, Java, C++"/></div></div>`;
+  g.appendChild(d);
+}
+function updateSkillLabels(){document.querySelectorAll('#skills-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Category ${i+1}`);}
+addSkill();
+
+let projCount=0;
+function addProject(){
+  const g=document.getElementById('projects-group'),idx=projCount++;
+  const d=document.createElement('div');d.className='entry';d.id='proj-'+idx;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Project ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('proj-${idx}','projects-group',updateProjLabels)">&times;</button></div><div class="row row-2" style="margin-bottom:14px"><div class="field"><label>Project Title</label><input type="text" placeholder="e.g. GST Fraud Detection System"/></div><div class="field"><label>Skills Used</label><input type="text" placeholder="e.g. Python, ML, Pandas"/></div></div><div class="field"><label>Bullet Points — one per line</label><textarea rows="4" placeholder="Developed a system using ML&#10;Achieved F1-score of 96%"></textarea></div>`;
+  g.appendChild(d);
+}
+function updateProjLabels(){document.querySelectorAll('#projects-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Project ${i+1}`);}
+addProject();
+
+let internCount=0;
+function addInternship(){
+  const g=document.getElementById('intern-group'),idx=internCount++;
+  const d=document.createElement('div');d.className='entry';d.id='intern-'+idx;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Internship ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('intern-${idx}','intern-group',updateInternLabels)">&times;</button></div><div class="row row-2" style="margin-bottom:14px"><div class="field"><label>Role</label><input type="text" placeholder="e.g. Automation &amp; Robotics Intern"/></div><div class="field"><label>Period</label><input type="text" placeholder="e.g. Jan 2026 - ongoing"/></div></div><div class="field" style="margin-bottom:14px"><label>Organisation</label><input type="text" placeholder="e.g. Automation &amp; Robotics Centre, PESU ECC"/></div><div class="field" style="margin-bottom:14px"><label>Skills Used</label><input type="text" placeholder="e.g. Python, KUKA Robotics, Linux"/></div><div class="field"><label>Bullet Points — one per line</label><textarea rows="3" placeholder="Gained hands-on experience&#10;Applied Python for robotic control"></textarea></div>`;
+  g.appendChild(d);
+}
+function updateInternLabels(){document.querySelectorAll('#intern-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Internship ${i+1}`);}
+addInternship();
+
+function addCourse(def=''){
+  const g=document.getElementById('courses-group');
+  const d=document.createElement('div');d.className='course-row';
+  const uid='cr-'+Date.now()+Math.floor(Math.random()*9999);d.id=uid;
+  d.innerHTML=`<input type="text" placeholder="e.g. Computer Networks" value="${def}"/><button class="btn-remove" onclick="removeCourse('${uid}')">&times;</button>`;
+  g.appendChild(d);
+}
+function removeCourse(id){
+  const g=document.getElementById('courses-group');
+  if(g.querySelectorAll('.course-row').length<=1){showToast('Keep at least one course',true);return;}
+  document.getElementById(id)?.remove();
+}
+addCourse();
+
+let posCount=0;
+function addPosition(){
+  const g=document.getElementById('positions-group'),idx=posCount++;
+  const d=document.createElement('div');d.className='entry';d.id='pos-'+idx;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Position ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('pos-${idx}','positions-group',updatePosLabels)">&times;</button></div><div class="row row-2"><div class="field"><label>Title</label><input type="text" placeholder="e.g. Head of Hospitality Domain, Maaya'24"/></div><div class="field"><label>Period</label><input type="text" placeholder="e.g. Aug 2024 - May 2025"/></div></div>`;
+  g.appendChild(d);
+}
+function updatePosLabels(){document.querySelectorAll('#positions-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Position ${i+1}`);}
+addPosition();
+
+let miscCount=0;
+function addMisc(){
+  const g=document.getElementById('misc-group'),idx=miscCount++;
+  const d=document.createElement('div');d.className='entry';d.id='misc-'+idx;
+  d.innerHTML=`<div class="entry-header"><span class="entry-tag">Item ${g.querySelectorAll('.entry').length+1}</span><button class="btn-remove" onclick="removeEntry('misc-${idx}','misc-group',updateMiscLabels)">&times;</button></div><div class="field" style="margin-bottom:14px"><label>Achievement / Certification / Award</label><input type="text" placeholder="e.g. Frontend Developer (React) - Coursera"/></div><div class="field"><label>Link · optional (makes it clickable in PDF)</label><input type="url" class="link-input" placeholder="https://credential.url"/></div>`;
+  g.appendChild(d);
+}
+function updateMiscLabels(){document.querySelectorAll('#misc-group .entry').forEach((el,i)=>el.querySelector('.entry-tag').textContent=`Item ${i+1}`);}
+addMisc();
+
+function removeEntry(id,groupId,relabelFn){
+  const g=document.getElementById(groupId);
+  if(g.querySelectorAll('.entry').length<=1){showToast('Keep at least one entry',true);return;}
+  document.getElementById(id)?.remove();if(relabelFn)relabelFn();
+}
+
+const ALL_LANGUAGES=["Afrikaans","Albanian","Amharic","Arabic","Aragonese","Armenian","Assamese","Azerbaijani","Basque","Belarusian","Bengali","Bosnian","Breton","Bulgarian","Burmese","Catalan","Cebuano","Chinese (Simplified)","Chinese (Traditional)","Corsican","Croatian","Czech","Danish","Dutch","English","Esperanto","Estonian","Faroese","Finnish","French","Frisian","Galician","Georgian","German","Greek","Gujarati","Haitian Creole","Hausa","Hawaiian","Hebrew","Hindi","Hmong","Hungarian","Icelandic","Igbo","Indonesian","Irish","Italian","Japanese","Javanese","Kannada","Kazakh","Khmer","Korean","Kurdish","Kyrgyz","Lao","Latin","Latvian","Lithuanian","Luxembourgish","Macedonian","Malagasy","Malay","Malayalam","Maltese","Maori","Marathi","Mongolian","Nepali","Norwegian","Nyanja","Odia","Pashto","Persian","Polish","Portuguese","Punjabi","Romanian","Russian","Samoan","Sanskrit","Serbian","Shona","Sindhi","Sinhala","Slovak","Slovenian","Somali","Spanish","Sundanese","Swahili","Swedish","Tagalog","Tajik","Tamil","Tatar","Telugu","Thai","Turkish","Turkmen","Ukrainian","Urdu","Uyghur","Uzbek","Vietnamese","Welsh","Xhosa","Yiddish","Yoruba","Zulu"].sort();
+let selectedLangs=[],ddFocused=0;
+function filterLangs(q){
+  const dd=document.getElementById('lang-dropdown');dd.innerHTML='';ddFocused=0;
+  if(!q.trim()){dd.style.display='none';return;}
+  const m=ALL_LANGUAGES.filter(l=>l.toLowerCase().includes(q.toLowerCase())&&!selectedLangs.includes(l)).slice(0,25);
+  if(!m.length){dd.innerHTML='<div class="lang-empty">No matches found</div>';dd.style.display='block';return;}
+  m.forEach((lang,i)=>{const el=document.createElement('div');el.className='lang-option'+(i===0?' focused':'');el.textContent=lang;el.addEventListener('mousedown',e=>{e.preventDefault();selectLang(lang);});dd.appendChild(el);});
+  dd.style.display='block';
+}
+function langKeydown(e){
+  const dd=document.getElementById('lang-dropdown'),items=dd.querySelectorAll('.lang-option');
+  if(!items.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();items[ddFocused]?.classList.remove('focused');ddFocused=Math.min(ddFocused+1,items.length-1);items[ddFocused]?.classList.add('focused');items[ddFocused]?.scrollIntoView({block:'nearest'});}
+  else if(e.key==='ArrowUp'){e.preventDefault();items[ddFocused]?.classList.remove('focused');ddFocused=Math.max(ddFocused-1,0);items[ddFocused]?.classList.add('focused');items[ddFocused]?.scrollIntoView({block:'nearest'});}
+  else if(e.key==='Enter'){e.preventDefault();const f=dd.querySelector('.lang-option.focused');if(f)selectLang(f.textContent);}
+  else if(e.key==='Escape')dd.style.display='none';
+}
+function selectLang(lang){if(!selectedLangs.includes(lang)){selectedLangs.push(lang);renderChips();}document.getElementById('lang-search').value='';document.getElementById('lang-dropdown').style.display='none';}
+function removeLang(lang){selectedLangs=selectedLangs.filter(l=>l!==lang);renderChips();}
+function renderChips(){
+  const c=document.getElementById('lang-chips');c.innerHTML='';
+  if(!selectedLangs.length){c.innerHTML='<span class="lang-none">None selected yet</span>';return;}
+  selectedLangs.forEach(lang=>{const chip=document.createElement('button');chip.className='lang-chip';chip.innerHTML=`${lang} <span style="opacity:.5">&times;</span>`;chip.addEventListener('click',()=>removeLang(lang));c.appendChild(chip);});
+}
+document.addEventListener('click',e=>{if(!e.target.closest('#lang-search-wrap'))document.getElementById('lang-dropdown').style.display='none';});
+
+function collectData(){
+  const data={name:v('p-name'),degree:v('p-degree'),degree_field:v('p-degree-field'),institution:v('p-institution'),phone:v('p-phone'),email:v('p-email'),linkedin:v('p-linkedin'),github:v('p-github'),portfolio:v('p-portfolio'),photo:photoDataURL,summary:v('s-summary'),education:[],technical_skills:[],projects:[],internships:[],courses:[],positions:[],miscellaneous:[],languages:selectedLangs};
+  document.querySelectorAll('#edu-group .entry').forEach(el=>{const inp=el.querySelectorAll('input');const deg=inp[0].value.trim();if(deg)data.education.push({degree:deg,institute:inp[1].value.trim(),grade:inp[2].value.trim(),year:inp[3].value.trim()});});
+  document.querySelectorAll('#skills-group .entry').forEach(el=>{const inp=el.querySelectorAll('input');const cat=inp[0].value.trim();if(cat)data.technical_skills.push({category:cat,items:inp[1].value.trim()});});
+  document.querySelectorAll('#projects-group .entry').forEach(el=>{const inp=el.querySelectorAll('input');const title=inp[0].value.trim();const ta=el.querySelector('textarea');if(title)data.projects.push({title,skills:inp[1].value.trim(),points:ta.value.split('\n').map(l=>l.trim()).filter(Boolean)});});
+  document.querySelectorAll('#intern-group .entry').forEach(el=>{const inp=el.querySelectorAll('input');const role=inp[0].value.trim();const ta=el.querySelector('textarea');if(role)data.internships.push({role,period:inp[1].value.trim(),org:inp[2].value.trim(),skills:inp[3].value.trim(),points:ta.value.split('\n').map(l=>l.trim()).filter(Boolean)});});
+  document.querySelectorAll('#courses-group .course-row input').forEach(inp=>{const c=inp.value.trim();if(c)data.courses.push(c);});
+  document.querySelectorAll('#positions-group .entry').forEach(el=>{const inp=el.querySelectorAll('input');const title=inp[0].value.trim();if(title)data.positions.push({title,period:inp[1].value.trim()});});
+  document.querySelectorAll('#misc-group .entry').forEach(el=>{const inp=el.querySelectorAll('input');const text=inp[0].value.trim();if(text)data.miscellaneous.push({text,link:inp[1].value.trim()});});
+  return data;
+}
+function v(id){const el=document.getElementById(id);return el?(el.value||'').trim():'';}
+
+async function generatePDF(){
+  const data=collectData();
+  if(!data.name){showToast('Please enter your full name first',true);goTo(0);return;}
+  const btn=document.getElementById('wiz-gen');btn.textContent='Generating…';btn.disabled=true;
+  try{
+    const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
+    const ML=18,MR=18,MT=14,PW=210,CW=PW-ML-MR;let y=MT;
+    const BLACK='#000000',DARK='#1a1a1a',MID='#555555',BLUE='#1155CC';
+    const sf=(style,sz,color)=>{doc.setFont('helvetica',style||'normal');doc.setFontSize(sz||9);doc.setTextColor(color||DARK);};
+    const pc=(n)=>{if(y+n>282){doc.addPage();y=MT;}};
+    const hr=(title)=>{pc(8);sf('bold',10.5,BLACK);doc.text(title,ML,y);y+=1;doc.setDrawColor(BLACK);doc.setLineWidth(0.5);doc.line(ML,y,ML+CW,y);y+=4;};
+    const bul=(t)=>{sf('normal',8.5,DARK);doc.splitTextToSize('- '+t,CW-5).forEach(l=>{pc(5);doc.text(l,ML+4,y);y+=4;});};
+    let photoW=0;
+    if(data.photo){try{doc.addImage(data.photo,'JPEG',ML,y,22,22);photoW=26;}catch(e){}}
+    const nX=ML+photoW;
+    sf('bold',17,BLACK);doc.text(data.name,nX,y+5);sf('normal',9,DARK);
+    if(data.degree)doc.text(data.degree,nX,y+10);
+    if(data.degree_field)doc.text(data.degree_field,nX,y+14.5);
+    if(data.institution)doc.text(data.institution,nX,y+19);
+    let cy=y+5;const RX=ML+CW;sf('normal',8.5,DARK);
+    if(data.phone){doc.text(data.phone,RX,cy,{align:'right'});cy+=4.5;}
+    if(data.email){doc.text(data.email,RX,cy,{align:'right'});cy+=4.5;}
+    [['LinkedIn Profile',data.linkedin],['Github',data.github],['Portfolio',data.portfolio]].forEach(([lbl,raw])=>{if(!raw)return;const url=raw.startsWith('http')?raw:'https://'+raw;sf('normal',8.5,BLUE);const tw=doc.getTextWidth(lbl);doc.text(lbl,RX,cy,{align:'right'});doc.link(RX-tw,cy-3.5,tw,4.5,{url});cy+=4.5;});
+    y+=26;
+    if(data.summary){hr('Summary');sf('normal',8.5,DARK);doc.splitTextToSize(data.summary,CW).forEach(l=>{pc(5);doc.text(l,ML,y);y+=4;});y+=3;}
+    if(data.education.length){
+      hr('Education');
+      const cols=[CW*0.34,CW*0.34,CW*0.18,CW*0.14],hdrs=['Degree','Institute/Board','Grade','Year'],rH=6,tx=ML;
+      doc.setFillColor('#f0f0f0');doc.rect(tx,y-3.5,CW,rH,'F');doc.setDrawColor('#cccccc');doc.setLineWidth(0.3);doc.rect(tx,y-3.5,CW,rH);
+      sf('bold',8.5,BLACK);let cx=tx;
+      hdrs.forEach((h,i)=>{doc.text(h,cx+cols[i]/2,y,{align:'center'});if(i<hdrs.length-1){doc.setDrawColor('#cccccc');doc.line(cx+cols[i],y-3.5,cx+cols[i],y+2.5);}cx+=cols[i];});
+      y+=rH-0.5;
+      data.education.forEach(e=>{pc(7);doc.setDrawColor('#cccccc');doc.setLineWidth(0.3);doc.rect(tx,y-3.5,CW,rH);sf('normal',8.5,DARK);let cx2=tx;[e.degree,e.institute,e.grade,e.year].forEach((val,i)=>{const cl=doc.splitTextToSize(val,cols[i]-2)[0]||val;doc.text(cl,cx2+cols[i]/2,y,{align:'center'});if(i<3){doc.setDrawColor('#cccccc');doc.line(cx2+cols[i],y-3.5,cx2+cols[i],y+2.5);}cx2+=cols[i];});y+=rH-0.5;});y+=3;
+    }
+    if(data.technical_skills.length){hr('Skills');data.technical_skills.forEach(s=>{pc(5);if(s.category){sf('bold',8.5,DARK);const pre='- '+s.category+': ';const pw=doc.getTextWidth(pre);doc.text(pre,ML+4,y);sf('normal',8.5,DARK);const rest=doc.splitTextToSize(s.items,CW-4-pw);doc.text(rest[0]||'',ML+4+pw,y);y+=4;if(rest.length>1)rest.slice(1).forEach(l=>{pc(5);doc.text(l,ML+4+pw,y);y+=4;});}else{bul(s.items);}});y+=3;}
+    if(data.projects.length){hr('Projects');data.projects.forEach(p=>{pc(6);sf('bold',8.5,DARK);const tl=doc.splitTextToSize('>> '+p.title,CW);tl.forEach(l=>{pc(5);doc.text(l,ML,y);y+=4;});if(p.skills){sf('italic',8.5,MID);doc.text('Skills: '+p.skills,ML+2,y);y+=4;}p.points.forEach(pt=>bul(pt));y+=2;});}
+    if(data.internships.length){hr('Internships');data.internships.forEach(i=>{pc(6);sf('bold',8.5,DARK);const lt=i.role+': '+i.org;const ll=doc.splitTextToSize(lt,CW*0.72);doc.text(ll[0],ML,y);doc.text(i.period,RX,y,{align:'right'});y+=4;if(ll.length>1)ll.slice(1).forEach(l=>{doc.text(l,ML,y);y+=4;});if(i.skills){sf('italic',8.5,MID);doc.text('Skills: '+i.skills,ML+2,y);y+=4;}i.points.forEach(pt=>bul(pt));y+=2;});}
+    if(data.courses.length){hr('Key Courses Taken');sf('normal',8.5,DARK);doc.splitTextToSize(data.courses.join(' | '),CW).forEach(l=>{pc(5);doc.text(l,ML,y);y+=4;});y+=3;}
+    if(data.positions.length){hr('Position of Responsibility');data.positions.forEach(p=>{pc(5);sf('bold',8.5,DARK);doc.text('- '+p.title,ML,y);doc.text(p.period,RX,y,{align:'right'});y+=4.5;});y+=2;}
+    if(data.miscellaneous.length){hr('Miscellaneous');data.miscellaneous.forEach(m=>{pc(5);if(m.link){const url=m.link.startsWith('http')?m.link:'https://'+m.link;sf('normal',8.5,BLUE);const display='- '+m.text;const tw=doc.getTextWidth(display);doc.text(display,ML+4,y);doc.link(ML+4,y-3.5,tw,4.5,{url});sf('normal',8.5,DARK);y+=4;}else{bul(m.text);}});y+=2;}
+    if(data.languages.length){hr('Languages');bul(data.languages.join(', '));}
+    const safe=(data.name||'resume').replace(/[^a-zA-Z0-9 _-]/g,'_').replace(/\s+/g,'_');
+    doc.save(safe+'_resume.pdf');showToast('Resume downloaded!');
+  }catch(err){console.error(err);showToast('Error: '+err.message,true);}
+  btn.innerHTML='↓ Export PDF';btn.disabled=false;
+}
+
+let tt;
+function showToast(msg,isError){
+  const t=document.getElementById('toast');
+  while(t.childNodes.length>1)t.removeChild(t.lastChild);
+  t.appendChild(document.createTextNode(msg));
+  t.className='show'+(isError?' error':'');
+  clearTimeout(tt);tt=setTimeout(()=>{t.className='';},3000);
+}
+</script>
+</body>
+</html>
