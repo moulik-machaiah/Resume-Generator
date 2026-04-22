@@ -79,19 +79,9 @@ body::before {
 .wiz-label { font-size: 11.5px; font-weight: 600; color: var(--ink-light); transition: color 0.2s; }
 .wiz-step.active .wiz-label { color: var(--amber); }
 .wiz-step.done .wiz-label { color: var(--sage); }
-#wiz-gen {
-  margin-left: auto; align-self: center; flex-shrink: 0;
-  background: var(--ink); color: var(--cream); border: none;
-  border-radius: 8px; padding: 9px 20px;
-  font-family: var(--font-body); font-size: 12px; font-weight: 700;
-  cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;
-  display: flex; align-items: center; gap: 6px;
-}
-#wiz-gen:hover { background: var(--amber); transform: translateY(-1px); box-shadow: 0 4px 14px var(--shadow-md); }
-#wiz-gen:disabled { background: var(--ink-faint); cursor: not-allowed; transform: none; }
 
 /* CONTENT */
-#content-wrap { display: flex; justify-content: center; padding: 56px 24px 100px; }
+#content-wrap { display: flex; justify-content: center; padding: 56px 24px 60px; }
 .section { display: none; width: 100%; max-width: 720px; animation: pageIn 0.4s cubic-bezier(0.16,1,0.3,1); }
 .section.active { display: block; }
 @keyframes pageIn { from { opacity: 0; transform: translateY(24px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -248,20 +238,9 @@ body::before {
 #progress-strip { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 999; background: var(--border); }
 #progress-fill { height: 100%; background: linear-gradient(90deg, var(--amber), #F59E0B); transition: width 0.4s cubic-bezier(0.4,0,0.2,1); width: 10%; }
 
-/* FOOTER */
-#footer-strip {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--paper); border-top: 1px solid var(--border);
-  padding: 12px 32px; display: flex; align-items: center;
-  justify-content: space-between; z-index: 100; box-shadow: 0 -4px 20px var(--shadow);
-}
-.footer-steps { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); letter-spacing: 1px; }
-.footer-steps span { color: var(--amber); font-weight: 600; }
-.footer-nav { display: flex; gap: 10px; }
-
 /* TOAST */
 #toast {
-  position: fixed; bottom: 72px; left: 50%;
+  position: fixed; bottom: 32px; left: 50%;
   transform: translateX(-50%) translateY(40px);
   background: var(--ink); color: var(--cream);
   padding: 13px 24px 13px 18px; border-radius: 10px;
@@ -283,7 +262,6 @@ body::before {
 <div id="progress-strip"><div id="progress-fill"></div></div>
 <div id="app">
   <div id="wizard-bar">
-    <button id="wiz-gen" onclick="generatePDF()">↓ Export PDF</button>
   </div>
   <div id="content-wrap">
 
@@ -486,25 +464,17 @@ body::before {
   </div>
 </div>
 
-<div id="footer-strip">
-  <div class="footer-steps">Step <span id="f-cur">1</span> of <span>10</span></div>
-  <div class="footer-nav">
-    <button class="btn-back" id="f-back" onclick="goTo(currentIdx-1)" style="padding:8px 18px;font-size:12.5px;">← Back</button>
-    <button class="btn-next" id="f-next" onclick="goTo(currentIdx+1)" style="padding:8px 18px;font-size:12.5px;">Next →</button>
-  </div>
-</div>
-
 <div id="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const SECTIONS=[{id:'sec-personal',label:'Personal Info'},{id:'sec-summary',label:'Summary'},{id:'sec-education',label:'Education'},{id:'sec-skills',label:'Skills'},{id:'sec-projects',label:'Projects'},{id:'sec-internships',label:'Internships'},{id:'sec-courses',label:'Courses'},{id:'sec-positions',label:'Positions'},{id:'sec-misc',label:'Misc'},{id:'sec-languages',label:'Languages'}];
 let currentIdx=0;
 function buildWizard(){
-  const bar=document.getElementById('wizard-bar'),btn=document.getElementById('wiz-gen');
+  const bar=document.getElementById('wizard-bar');
   SECTIONS.forEach((s,i)=>{
     const el=document.createElement('div');el.className='wiz-step'+(i===0?' active':'');el.id='wiz-'+i;
     el.innerHTML=`<span class="wiz-num">${String(i+1).padStart(2,'0')}</span><span class="wiz-label">${s.label}</span>`;
-    el.addEventListener('click',()=>goTo(i));bar.insertBefore(el,btn);
+    el.addEventListener('click',()=>goTo(i));bar.appendChild(el);
   });
 }
 function goTo(idx){
@@ -514,15 +484,11 @@ function goTo(idx){
   document.getElementById(SECTIONS[idx].id).classList.add('active');
   document.getElementById('wiz-'+idx).classList.add('active');
   document.getElementById('progress-fill').style.width=((idx+1)/SECTIONS.length*100).toFixed(0)+'%';
-  document.getElementById('f-cur').textContent=idx+1;
-  document.getElementById('f-back').style.visibility=idx===0?'hidden':'visible';
-  document.getElementById('f-next').style.display=idx===9?'none':'';
   currentIdx=idx;
   document.getElementById('wiz-'+idx).scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   window.scrollTo(0,0);
 }
 buildWizard();
-document.getElementById('f-back').style.visibility='hidden';
 
 let photoDataURL='';
 function handlePhoto(input){
@@ -655,7 +621,6 @@ function v(id){const el=document.getElementById(id);return el?(el.value||'').tri
 async function generatePDF(){
   const data=collectData();
   if(!data.name){showToast('Please enter your full name first',true);goTo(0);return;}
-  const btn=document.getElementById('wiz-gen');btn.textContent='Generating…';btn.disabled=true;
   try{
     const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
     const ML=18,MR=18,MT=14,PW=210,CW=PW-ML-MR;let y=MT;
@@ -696,7 +661,6 @@ async function generatePDF(){
     const safe=(data.name||'resume').replace(/[^a-zA-Z0-9 _-]/g,'_').replace(/\s+/g,'_');
     doc.save(safe+'_resume.pdf');showToast('Resume downloaded!');
   }catch(err){console.error(err);showToast('Error: '+err.message,true);}
-  btn.innerHTML='↓ Export PDF';btn.disabled=false;
 }
 
 let tt;
